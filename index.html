@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Date Writer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.16.0/pdf-lib.min.js"></script>
+</head>
+<body>
+    <h2>PDF Date Updater</h2>
+    <button onclick="editPDF()">Download Updated PDF</button>
+    
+    <script>
+        async function editPDF() {
+            const pdfUrl = 'formatnightshift.pdf'; // Embedded PDF file
+            const existingPdfBytes = await fetch(pdfUrl).then(res => res.arrayBuffer());
+            const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+            const pages = pdfDoc.getPages();
+            
+            const now = new Date();
+            const text = `${now.getDate().toString().padStart(2, '0')}.${(now.getMonth() + 1).toString().padStart(2, '0')}.${now.getFullYear()}`;
+            
+            // Define specific positions based on red arrows
+            const positions = [
+                { page: 0, x: 80, y: 105, rotate: 0 },  // First page date position (normal)
+                { page: 1, x: 470, y: 212, rotate: 180 }  // Second page date position (flipped)
+            ];
+            
+            positions.forEach(pos => {
+                if (pages[pos.page]) {
+                    pages[pos.page].drawText(text, {
+                        x: pos.x,
+                        y: pos.y,
+                        size: 20,
+                        color: PDFLib.rgb(0, 0, 0),
+                        rotate: PDFLib.degrees(pos.rotate),
+                    });
+                }
+            });
+            
+            const modifiedPdfBytes = await pdfDoc.save();
+            const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'updated.pdf';
+            link.click();
+        }
+    </script>
+</body>
+</html>
